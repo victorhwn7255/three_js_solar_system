@@ -8,11 +8,38 @@ const pane = new Pane();
 // initialize the scene
 const scene = new THREE.Scene();
 
+//add textures
+const textureLoader = new THREE.TextureLoader()
+const sunTexture = textureLoader.load('/textures/2k_sun.jpg')
+const mercuryTexture = textureLoader.load("/textures/2k_mercury.jpg");
+const venusTexture = textureLoader.load("/textures/2k_venus_surface.jpg");
+const earthTexture = textureLoader.load("/textures/2k_earth_daymap.jpg");
+const marsTexture = textureLoader.load("/textures/2k_mars.jpg");
+const moonTexture = textureLoader.load("/textures/2k_moon.jpg");
+
+// add materials
+const sunMaterial = new THREE.MeshBasicMaterial({
+  map: sunTexture,
+});
+const mercuryMaterial = new THREE.MeshStandardMaterial({
+  map: mercuryTexture,
+});
+const venusMaterial = new THREE.MeshStandardMaterial({
+  map: venusTexture,
+});
+const earthMaterial = new THREE.MeshStandardMaterial({
+  map: earthTexture,
+});
+const marsMaterial = new THREE.MeshStandardMaterial({
+  map: marsTexture,
+});
+const moonMaterial = new THREE.MeshStandardMaterial({
+  map: moonTexture,
+});
+
+
 // add stuff here
 const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
-const sunMaterial = new THREE.MeshBasicMaterial({
-  color: 0xfff700
-})
 
 const sun = new THREE.Mesh(
   sphereGeometry,
@@ -78,6 +105,38 @@ const planets = [
   },
 ];
 
+const planetMeshes = planets.map((eachPlanet) => {
+  //create the mesh
+  const planetMesh = new THREE.Mesh(
+    sphereGeometry,
+    eachPlanet.material
+  )
+  planetMesh.scale.setScalar(eachPlanet.radius)
+  planetMesh.position.x = eachPlanet.distance
+
+  //add it to the scene
+  scene.add(planetMesh)
+
+  //loop through each moon and add moon to its parent planet
+  eachPlanet.moons.forEach((moon) => {
+    const moonMesh = new THREE.Mesh(
+      sphereGeometry,
+      moonMaterial
+    )
+    moonMesh.scale.setScalar(moon.radius)
+    moonMesh.position.x = moon.distance
+    planetMesh.add(moonMesh)
+  })
+  
+  return planetMesh;
+})
+
+//add lighting
+const ambientLight = new THREE.AmbientLight(
+  0xffffff,
+  0.5
+)
+scene.add(ambientLight)
 
 // initialize the camera
 const camera = new THREE.PerspectiveCamera(
@@ -110,7 +169,17 @@ window.addEventListener("resize", () => {
 
 // render loop
 const renderloop = () => {
-  //animation
+  //rotation animation
+  planetMeshes.forEach((eachPlanet, index)=> {
+    eachPlanet.rotation.y += planets[index].speed
+    eachPlanet.position.x = Math.sin(eachPlanet.rotation.y) * planets[index].distance
+    eachPlanet.position.z = Math.cos(eachPlanet.rotation.y) * planets[index].distance
+    eachPlanet.children.forEach((moon, moonIndex) => {
+      moon.rotation.y += planets[index].moons[moonIndex].speed
+      moon.position.x = Math.sin(moon.rotation.y) * planets[index].moons[moonIndex].distance
+      moon.position.z = Math.cos(moon.rotation.y) * planets[index].moons[moonIndex].distance
+    })
+  })
 
   controls.update();
   renderer.render(scene, camera);
