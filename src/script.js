@@ -37,6 +37,17 @@ const moonMaterial = new THREE.MeshStandardMaterial({
   map: moonTexture,
 });
 
+//add background
+const cubeTextureLoader = new THREE.CubeTextureLoader()
+const backgroundTexture = cubeTextureLoader.load([
+  '/textures/cubeMap/px.png',
+  '/textures/cubeMap/nx.png',
+  '/textures/cubeMap/py.png',
+  '/textures/cubeMap/ny.png',
+  '/textures/cubeMap/pz.png',
+  '/textures/cubeMap/nz.png',
+])
+scene.background = backgroundTexture
 
 // add stuff here
 const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
@@ -132,11 +143,15 @@ const planetMeshes = planets.map((eachPlanet) => {
 })
 
 //add lighting
+const pointLight = new THREE.PointLight(
+  0xffffff,
+  2
+)
 const ambientLight = new THREE.AmbientLight(
   0xffffff,
-  0.5
+  0.3
 )
-scene.add(ambientLight)
+scene.add(pointLight, ambientLight)
 
 // initialize the camera
 const camera = new THREE.PerspectiveCamera(
